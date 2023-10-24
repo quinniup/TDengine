@@ -432,10 +432,21 @@ class TDTestCase:
         self.ts_3036("%s" %self.db)
             
             
+        self.test_select_as_chinese_characters();
         endTime = time.time()
         print("total time %ds" % (endTime - startTime))
     
+    def test_select_as_chinese_characters(self):
+        tdSql.execute("use sel_null")
+        tdSql.query("select ts as 时间戳, c0 as c第一列, t0 标签1 from sel_null.stb0_0 limit 10", queryTimes=1)
+        tdSql.checkRows(10)
+        tdSql.query("select 时间戳 from (select ts as 时间戳, c0 as c第一列, t0 标签1 from sel_null.stb0_0) where 时间戳 > '2023-1-1' and c第一列 != 0 and 标签1 == 0 limit 10", queryTimes=1)
+        tdSql.checkRows(10)
+        tdSql.query("select count(*) as 计数 from sel_null.stb0_0 partition by c0 as 分组列", queryTimes=1)
 
+        tdSql.error("create database 数据库")
+        tdSql.error("create table sel_null.中文库 (ts timestamp, c2 int)")
+        tdSql.error("create table sel_null.table1(ts timestamp, 列2 int)")
 
     def stop(self):
         tdSql.close()
