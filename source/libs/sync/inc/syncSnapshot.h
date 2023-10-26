@@ -22,9 +22,9 @@ extern "C" {
 
 #include "syncInt.h"
 
-#define SYNC_SNAPSHOT_SEQ_INVALID      -2
 #define SYNC_SNAPSHOT_SEQ_FORCE_CLOSE  -3
-#define SYNC_SNAPSHOT_SEQ_PREP_SNAPSHOT -1
+#define SYNC_SNAPSHOT_SEQ_INVALID      -2
+#define SYNC_SNAPSHOT_SEQ_PREP -1
 #define SYNC_SNAPSHOT_SEQ_BEGIN        0
 #define SYNC_SNAPSHOT_SEQ_END          0x7FFFFFFF
 

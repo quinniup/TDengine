@@ -141,7 +141,7 @@ int32_t snapshotSenderStart(SSyncSnapshotSender *pSender) {
   int8_t started = atomic_val_compare_exchange_8(&pSender->start, false, true);
   if (started) return 0;
 
-  pSender->seq = SYNC_SNAPSHOT_SEQ_BEGIN;
+  pSender->seq = SYNC_SNAPSHOT_SEQ_PREP;
   pSender->ack = SYNC_SNAPSHOT_SEQ_INVALID;
   pSender->pReader = NULL;
   pSender->pCurrentBlock = NULL;
@@ -196,7 +196,7 @@ int32_t snapshotSenderStart(SSyncSnapshotSender *pSender) {
   pMsg->lastConfigIndex = pSender->snapshot.lastConfigIndex;
   pMsg->lastConfig = pSender->lastConfig;
   pMsg->startTime = pSender->startTime;
-  pMsg->seq = SYNC_SNAPSHOT_SEQ_PREP_SNAPSHOT;
+  pMsg->seq = pSender->seq;
 
   if (dataLen > 0) {
     pMsg->payloadType = snapInfo.type;
@@ -523,7 +523,7 @@ void snapshotReceiverStart(SSyncSnapshotReceiver *pReceiver, SyncSnapshotSend *p
   int8_t started = atomic_val_compare_exchange_8(&pReceiver->start, false, true);
   if (started) return;
 
-  pReceiver->ack = SYNC_SNAPSHOT_SEQ_PREP_SNAPSHOT;
+  pReceiver->ack = SYNC_SNAPSHOT_SEQ_PREP;
   pReceiver->term = pPreMsg->term;
   pReceiver->fromId = pPreMsg->srcId;
   pReceiver->startTime = pPreMsg->startTime;
@@ -592,6 +592,11 @@ static int32_t snapshotReceiverFinish(SSyncSnapshotReceiver *pReceiver, SyncSnap
     // update progress
     pReceiver->ack = SYNC_SNAPSHOT_SEQ_END;
 
+    // get fsmState
+    SSnapshot snapshot = {0};
+    pReceiver->pSyncNode->pFsm->FpGetSnapshotInfo(pReceiver->pSyncNode->pFsm, &snapshot);
+    pReceiver->pSyncNode->fsmState = snapshot.state;
+
     // reset wal
     code =
         pReceiver->pSyncNode->pLogStore->syncLogRestoreFromSnapshot(pReceiver->pSyncNode->pLogStore, pMsg->lastIndex);
@@ -600,12 +605,6 @@ static int32_t snapshotReceiverFinish(SSyncSnapshotReceiver *pReceiver, SyncSnap
       return -1;
     }
     sRInfo(pReceiver, "wal log restored from snapshot");
-
-    // get fsmState
-    SSnapshot snapshot = {0};
-    pReceiver->pSyncNode->pFsm->FpGetSnapshotInfo(pReceiver->pSyncNode->pFsm, &snapshot);
-    pReceiver->pSyncNode->fsmState = snapshot.state;
-
   } else {
     sRError(pReceiver, "snapshot receiver finish error since writer is null");
     return -1;
@@ -991,7 +990,7 @@ _SEND_REPLY:;
 
 // receiver on message
 //
-// condition 1, recv SYNC_SNAPSHOT_SEQ_PREP_SNAPSHOT
+// condition 1, recv SYNC_SNAPSHOT_SEQ_PREP
 //              if receiver already start
 //                    if sender.start-time > receiver.start-time, restart receiver(reply snapshot start)
 //                    if sender.start-time = receiver.start-time, maybe duplicate msg
@@ -1040,7 +1039,7 @@ int32_t syncNodeOnSnapshot(SSyncNode *pSyncNode, SRpcMsg *pRpcMsg) {
   int32_t code = 0;
   if (pSyncNode->state == TAOS_SYNC_STATE_FOLLOWER || pSyncNode->state == TAOS_SYNC_STATE_LEARNER) {
     if (pMsg->term == raftStoreGetTerm(pSyncNode)) {
-      if (pMsg->seq == SYNC_SNAPSHOT_SEQ_PREP_SNAPSHOT) {
+      if (pMsg->seq == SYNC_SNAPSHOT_SEQ_PREP) {
         sInfo("vgId:%d, receive prepare msg of snap replication. msg signature:(%" PRId64 ", %" PRId64 ")",
               pSyncNode->vgId, pMsg->term, pMsg->startTime);
         code = syncNodeOnSnapshotPrep(pSyncNode, pMsg);
@@ -1052,7 +1051,10 @@ int32_t syncNodeOnSnapshot(SSyncNode *pSyncNode, SRpcMsg *pRpcMsg) {
         sInfo("vgId:%d, receive end msg of snap replication. msg signature:(%" PRId64 ", %" PRId64 ")", pSyncNode->vgId,
               pMsg->term, pMsg->startTime);
         code = syncNodeOnSnapshotEnd(pSyncNode, pMsg);
-        if (syncLogBufferReInit(pSyncNode->pLogBuf, pSyncNode) != 0) {
+        if (code != 0) {
+          sRError(pReceiver, "failed to end snapshot.");
+          code = -1;
+        } else if (syncLogBufferReInit(pSyncNode->pLogBuf, pSyncNode) != 0) {
           sRError(pReceiver, "failed to reinit log buffer since %s", terrstr());
           code = -1;
         }
@@ -1143,7 +1145,6 @@ static int32_t syncNodeOnSnapshotPrepRsp(SSyncNode *pSyncNode, SSyncSnapshotSend
   sSInfo(pSender, "begin snapshot replication to dnode %d.", DID(&pSendMsg->destId));
 
   // send msg
-  syncLogSendSyncSnapshotSend(pSyncNode, pSendMsg, "snapshot sender reply pre");
   if (syncNodeSendMsgById(&pSendMsg->destId, pSender->pSyncNode, &rpcMsg) != 0) {
     sSError(pSender, "prepare snapshot failed since send msg error");
     return -1;
@@ -1166,6 +1167,18 @@ static int32_t syncSnapBufferSend(SSyncSnapshotSender *pSender, SyncSnapshotRsp 
   SyncSnapshotRsp *pMsg = ppMsg[0];
 
   taosThreadMutexLock(&pSndBuf->mutex);
+  if (snapshotSenderSignatureCmp(pSender, pMsg) != 0) {
+    terrno = TSDB_CODE_SYN_MISMATCHED_SIGNATURE;
+    code = terrno;
+    goto _out;
+  }
+
+  if (pSender->pReader == NULL || pSender->finish) {
+    sSError(pSender, "snapshot sender invalid error:%s 0x%x, pReader:%p finish:%d", tstrerror(pMsg->code), pMsg->code,
+            pSender->pReader, pSender->finish);
+    terrno = pMsg->code;
+    goto _out;
+  }
 
   if (pMsg->ack - pSndBuf->start >= pSndBuf->size) {
     terrno = TSDB_CODE_SYN_BUFFER_FULL;
@@ -1202,9 +1215,6 @@ static int32_t syncSnapBufferSend(SSyncSnapshotSender *pSender, SyncSnapshotRsp 
     if (snapshotSend(pSender) != 0) {
       code = terrno;
       goto _out;
-    }
-    if (pSender->seq != SYNC_SNAPSHOT_SEQ_END) {
-      pSndBuf->end = TMAX(pSender->seq + 1, pSndBuf->end);
     }
   }
 
@@ -1285,23 +1295,13 @@ int32_t syncNodeOnSnapshotRsp(SSyncNode *pSyncNode, SRpcMsg *pRpcMsg) {
   }
 
   // prepare <begin, end>, send begin msg
-  if (pMsg->ack == SYNC_SNAPSHOT_SEQ_PREP_SNAPSHOT) {
+  if (pMsg->ack == SYNC_SNAPSHOT_SEQ_PREP) {
     return syncNodeOnSnapshotPrepRsp(pSyncNode, pSender, pMsg);
   }
 
-  if (pSender->pReader == NULL || pSender->finish) {
-    sSError(pSender, "snapshot sender invalid error:%s 0x%x, pReader:%p finish:%d", tstrerror(pMsg->code), pMsg->code,
-            pSender->pReader, pSender->finish);
-    terrno = pMsg->code;
+  if (pMsg->ack < SYNC_SNAPSHOT_SEQ_BEGIN) {
+    terrno = TSDB_CODE_SYN_INVALID_SNAPSHOT_MSG;
     goto _ERROR;
-  }
-
-  if (pMsg->ack == SYNC_SNAPSHOT_SEQ_BEGIN) {
-    sSInfo(pSender, "process seq begin");
-    if (snapshotSend(pSender) != 0) {
-      goto _ERROR;
-    }
-    return 0;
   }
 
   // receive ack is finish, close sender
