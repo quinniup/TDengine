@@ -6,7 +6,7 @@ on:
   push:
     # Sequence of patterns matched against refs/tags
     tags:
-      - "ver-3.*.*.*" # Push events to matching v*, i.e. v1.0, v20.15.10
+      - "ver-3*" # Push events to matching v*, i.e. v1.0, v20.15.10
 
 jobs:
   build:
