@@ -40,6 +40,9 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y libgeos-dev 
         sudo apt install build-essential libjansson-dev libsnappy-dev liblzma-dev libz-dev zlib1g pkg-config
+       
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+        cargo --version
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
@@ -62,7 +65,6 @@ jobs:
         -DBUILD_CONTRIB=true
         -DBUILD_HTTP=false
         -DWEBSOCKET=true
-        -DJEMALLOC_ENABLED=0
         -S ${{ github.workspace }}
 
     - name: Build
