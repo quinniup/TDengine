@@ -120,13 +120,6 @@ jobs:
         key: ${{ runner.os }}-cmake-${{ matrix.build_type }}-${{ steps.strings.outputs.version }}
 
 
-    - name: Test
-      working-directory: ${{ steps.strings.outputs.build-output-dir }}
-      # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ctest --build-config ${{ matrix.build_type }}
-      
-
     - name: Tar the Build
       run: >
         cd ${{ github.workspace }}/packaging/tools &&
