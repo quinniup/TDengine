@@ -91,7 +91,7 @@ jobs:
       id: strings
       shell: bash
       run: |
-        echo "build-output-dir=${{ github.workspace }}" >> "$GITHUB_OUTPUT"
+        echo "build-output-dir=${{ github.workspace }}/debug" >> "$GITHUB_OUTPUT"
         echo ::set-output name=tag::${GITHUB_REF#refs/*/}
         echo ::set-output name=datetime::$(date +"%Y-%m-%d_%H-%M-%S")
 
@@ -99,15 +99,14 @@ jobs:
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: >
-        cmake -B ${{ steps.strings.outputs.build-output-dir }}
-        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
-        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-        -DBUILD_TOOLS=true
-        -DBUILD_CONTRIB=true
-        -DBUILD_HTTP=false
-        -DWEBSOCKET=true
-        -S ${{ github.workspace }}
+        cmake .. \
+        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
+        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
+        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+        -DBUILD_TOOLS=true \
+        -DBUILD_CONTRIB=true \
+        -DBUILD_HTTP=false \
+        -DWEBSOCKET=true \
 
     - name: Build
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
@@ -131,7 +130,7 @@ jobs:
     - name: Tar the Build
       run: >
         cd ${{ github.workspace }}/packaging/tools &&
-        ./makepkg.sh ${{ github.workspace }} ${{ steps.strings.outputs.tag }} ${{ steps.strings.outputs.datetime }} x64 Linux server stable cloud ${{ steps.strings.outputs.tag }} taos TDengine taos 
+        ./makepkg.sh ${{ steps.strings.outputs.build-output-dir }} ${{ steps.strings.outputs.tag }} ${{ steps.strings.outputs.datetime }} x64 Linux server stable cloud ${{ steps.strings.outputs.tag }} taos TDengine taos 
 
       
     - name: Create Release and Upload Release Asset
