@@ -60,6 +60,9 @@ jobs:
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         -DBUILD_TOOLS=true
         -DBUILD_CONTRIB=true
+        -DBUILD_HTTP=false
+        -DWEBSOCKET=true
+        -DJEMALLOC_ENABLED=0
         -S ${{ github.workspace }}
 
     - name: Build
@@ -76,7 +79,7 @@ jobs:
     - name: Tar the Build
       run: >
         cd ${{ github.workspace }}/packaging/tools &&
-        sh makepkg.sh ${{ github.workspace }} ${{ steps.strings.outputs.tag }} ${{ steps.strings.outputs.datetime }} x64 Linux server stable cloud ${{ steps.strings.outputs.tag }} taos TDengine taos 
+        ./makepkg.sh ${{ github.workspace }} ${{ steps.strings.outputs.tag }} ${{ steps.strings.outputs.datetime }} x64 Linux server stable cloud ${{ steps.strings.outputs.tag }} taos TDengine taos 
 
       
     - name: Create Release and Upload Release Asset
