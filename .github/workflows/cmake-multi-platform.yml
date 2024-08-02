@@ -101,19 +101,14 @@ jobs:
       run: >
         mkdir -p ${{ steps.strings.outputs.build-output-dir }} &&
         cd ${{ steps.strings.outputs.build-output-dir }} &&
-        cmake ${{ github.workspace }}
+        cmake ..
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         -DBUILD_TOOLS=true
         -DBUILD_CONTRIB=true
         -DBUILD_HTTP=false
-        -DWEBSOCKET=true
-
-    - name: Build
-      # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
-      run: |
-        make -j 8
+        -DWEBSOCKET=true && make
 
     - uses: actions/cache@v3
       with:
