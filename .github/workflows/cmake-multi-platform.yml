@@ -41,6 +41,8 @@ jobs:
       shell: bash
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+        echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+        echo ::set-output name=datetime::$(date +"%Y-%m-%d_%H-%M-%S")
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -50,6 +52,8 @@ jobs:
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DBUILD_TOOLS=true
+        -DBUILD_CONTRIB=true
         -S ${{ github.workspace }}
 
     - name: Build
@@ -61,19 +65,20 @@ jobs:
       # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest --build-config ${{ matrix.build_type }}
-    
-    - name: BuildSha
-      run: echo ${{ github.sha }} > Release.txt
+      
 
-    - name: Zip the Build
-      run: zip -r ${{ github.workspace }} ${{ steps.strings.outputs.build-output-dir }} 
+    - name: Tar the Build
+      run: >
+        cd ${{ github.workspace }}/packaging/tools &&
+        sh makepkg.sh ${{ github.workspace }} ${{ steps.strings.outputs.tag }} ${{ steps.strings.outputs.datetime }} x64 Linux server stable cloud ${{ steps.strings.outputs.tag }} taos TDengine taos 
+
       
     - name: Create Release and Upload Release Asset
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
-        tag_name: ${{ github.ref }}
-        name: Release ${{ github.ref }}
+        tag_name: ${{ steps.strings.outputs.tag }}
+        name: Release ${{ steps.strings.outputs.tag }}
         body: TODO New Release.
         draft: false
         prerelease: false
