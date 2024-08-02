@@ -38,11 +38,53 @@ jobs:
     - name: Check Machine deps
       run: |
         sudo apt-get update
-        sudo apt-get install -y libgeos-dev 
+        sudo apt install -y libgeos-dev 
         sudo apt install build-essential libjansson-dev libsnappy-dev liblzma-dev libz-dev zlib1g pkg-config
-       
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-        cargo --version
+
+
+    - name: Set up Rust
+      id: setup-rust
+      uses: actions-rs/toolchain@v1
+      with:
+        components: rustfmt, clippy, llvm-tools-preview
+        toolchain: stable
+        default: true
+
+    - name: Install cargo-llvm-cov
+      uses: taiki-e/install-action@cargo-llvm-cov
+
+    - uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+        key: ${{ runner.os }}-cargo-${{ steps.setup-rust.outputs.rustc_hash }}
+
+    - uses: actions/cache@v3
+      with:
+        path: |
+          target
+        key: ${{ runner.os }}-taos-target-${{ steps.setup-rust.outputs.rustc_hash }}
+
+    - name: Prepare development tools
+      run: |
+        sudo apt install libjansson-dev libsnappy-dev liblzma-dev libz-dev pkg-config libgflags2.2 libgflags-dev libgeos-dev -y
+        sudo timedatectl set-timezone Asia/Shanghai
+        sudo date
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.19
+
+    - uses: actions/cache@v3
+      id: cache-rust-target
+      with:
+        path: |
+          TDengine/tools/taosws-rs/target/
+        key: ${{ runner.os }}-cargo-target-${{ steps.setup-rust.outputs.rustc_hash }}        
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
@@ -70,6 +112,13 @@ jobs:
     - name: Build
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
+
+    - uses: actions/cache@v3
+      with:
+        path: |
+          ${{ steps.strings.outputs.build-output-dir }}
+        key: ${{ runner.os }}-cmake-${{ matrix.build_type }}-${{ steps.strings.outputs.version }}
+
 
     - name: Test
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
