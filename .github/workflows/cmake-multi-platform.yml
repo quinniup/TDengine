@@ -112,6 +112,7 @@ jobs:
     - name: Build
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       run: |
+        cd ${{ github.workspace }} && pwd
         cmake .. -DBUILD_TOOLS=true -DBUILD_CONTRIB=true -DBUILD_HTTP=false -DWEBSOCKET=true
         make -j 8
 
