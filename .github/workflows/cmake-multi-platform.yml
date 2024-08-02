@@ -46,7 +46,7 @@ jobs:
       id: strings
       shell: bash
       run: |
-        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+        echo "build-output-dir=${{ github.workspace }}" >> "$GITHUB_OUTPUT"
         echo ::set-output name=tag::${GITHUB_REF#refs/*/}
         echo ::set-output name=datetime::$(date +"%Y-%m-%d_%H-%M-%S")
 
