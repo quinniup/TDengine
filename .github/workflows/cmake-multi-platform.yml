@@ -120,7 +120,7 @@ jobs:
     - name: Tar the Build
       run: >
         cd ${{ github.workspace }}/packaging/tools &&
-        ./makepkg.sh ${{ steps.strings.outputs.build-output-dir }} ${{ steps.strings.outputs.tag }} ${{ steps.strings.outputs.datetime }} x64 Linux server stable cloud ${{ steps.strings.outputs.tag }} taos TDengine taos 
+        ./makepkg_custom.sh ${{ steps.strings.outputs.build-output-dir }} ${{ steps.strings.outputs.tag }} ${{ steps.strings.outputs.datetime }} x64 Linux server stable cloud ${{ steps.strings.outputs.tag }} taos TDengine taos 
 
       
     - name: Create Release and Upload Release Asset
