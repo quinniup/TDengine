@@ -93,7 +93,7 @@ jobs:
         -DBUILD_TOOLS=true
         -DBUILD_CONTRIB=true
         -DBUILD_HTTP=false
-        -DWEBSOCKET=true && make -j 8
+        -DWEBSOCKET=true && make
 
     - name: Tar the Build
       run: >
