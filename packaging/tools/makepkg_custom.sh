@@ -109,6 +109,9 @@ if [ "$osType" == "Darwin" ]; then
     lib_files="${build_dir}/lib/libtaos.${version}.dylib"
     wslib_files="${build_dir}/lib/libtaosws.dylib"
 else
+    if [ ! -f "${build_dir}/lib/libtaos.so.${version}" ]; then
+      mv ${build_dir}/lib/libtaos.so ${build_dir}/lib/libtaos.so.${version}
+    fi
     lib_files="${build_dir}/lib/libtaos.so.${version}"
     wslib_files="${build_dir}/lib/libtaosws.so"
 fi
