@@ -23,11 +23,11 @@ jobs:
       #
       # To add more build types (Release, Debug, RelWithDebInfo, etc.) customize the build_type list.
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-20.04]
         build_type: [Release]
         c_compiler: [gcc]
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-20.04
             c_compiler: gcc
             cpp_compiler: g++
 
@@ -37,9 +37,9 @@ jobs:
 
     - name: Check Machine deps
       run: |
-        sudo apt-get update
+        sudo apt update
         sudo apt install -y libgeos-dev 
-        sudo apt install build-essential libjansson-dev libsnappy-dev liblzma-dev libz-dev zlib1g pkg-config
+        sudo apt install -y build-essential libjansson-dev libsnappy-dev liblzma-dev libz-dev zlib1g pkg-config
 
 
     - name: Set up Rust
@@ -90,9 +90,6 @@ jobs:
         mkdir -p ${{ steps.strings.outputs.build-output-dir }} &&
         cd ${{ steps.strings.outputs.build-output-dir }} &&
         cmake ..
-        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
-        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         -DBUILD_TOOLS=true
         -DBUILD_CONTRIB=true
         -DBUILD_HTTP=false
