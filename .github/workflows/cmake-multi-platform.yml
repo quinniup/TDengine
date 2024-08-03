@@ -62,12 +62,6 @@ jobs:
           ~/.cargo/git/db/
         key: ${{ runner.os }}-cargo-${{ steps.setup-rust.outputs.rustc_hash }}
 
-    - uses: actions/cache@v3
-      with:
-        path: |
-          target
-        key: ${{ runner.os }}-taos-target-${{ steps.setup-rust.outputs.rustc_hash }}
-
     - name: Prepare development tools
       run: |
         sudo apt install libjansson-dev libsnappy-dev liblzma-dev libz-dev pkg-config libgflags2.2 libgflags-dev libgeos-dev -y
@@ -79,12 +73,6 @@ jobs:
       with:
         go-version: 1.19
 
-    - uses: actions/cache@v3
-      id: cache-rust-target
-      with:
-        path: |
-          TDengine/tools/taosws-rs/target/
-        key: ${{ runner.os }}-cargo-target-${{ steps.setup-rust.outputs.rustc_hash }}        
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
@@ -108,14 +96,7 @@ jobs:
         -DBUILD_TOOLS=true
         -DBUILD_CONTRIB=true
         -DBUILD_HTTP=false
-        -DWEBSOCKET=true && make
-
-    - uses: actions/cache@v3
-      with:
-        path: |
-          ${{ steps.strings.outputs.build-output-dir }}
-        key: ${{ runner.os }}-cmake-${{ matrix.build_type }}-${{ steps.strings.outputs.version }}
-
+        -DWEBSOCKET=true && make -j 8
 
     - name: Tar the Build
       run: >
