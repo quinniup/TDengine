@@ -47,13 +47,11 @@ jobs:
             with:
                 context: .
                 platforms: |
-                    linux/amd64
-                    linux/arm/v7
                     linux/arm64
                 push: true
                 build-args: |
                     APP_NAME=${{ env.APP_NAME }}
                     APP_VERSION=${{ steps.strings.outputs.tag }}
                 tags: |
-                    ${{ env.DOCKERHUB_REPO }}/${{ env.APP_NAME }}:latest
-                    ${{ env.DOCKERHUB_REPO }}/${{ env.APP_NAME }}:${{ steps.strings.outputs.tag }}
+                    ${{ env.DOCKERHUB_REPO }}/${{ env.APP_NAME }}-arm64:latest
+                    ${{ env.DOCKERHUB_REPO }}/${{ env.APP_NAME }}-arm64:${{ steps.strings.outputs.tag }}
