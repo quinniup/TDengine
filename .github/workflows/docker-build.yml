@@ -38,6 +38,7 @@ jobs:
         -   name: Login to DockerHub
             uses: docker/login-action@v1
             with:
+                registry: hub-image.eiot6.com
                 username: ${{ secrets.CYFL_TENCENT_DOCKERHUB_USER }}
                 password: ${{ secrets.CYFL_TENCENT_DOCKERHUB_TOKEN }}
                 
