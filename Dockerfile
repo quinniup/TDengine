@@ -21,7 +21,7 @@ ENV TZ=Asia/Shanghai
 
 
 COPY --from=builder /td/TDengine/include/client/taos.h /usr/include/taos.h
-COPY --from=builder /td/TDengine/iclude/common/taosdef.h /usr/include/taosdef.h
+COPY --from=builder /td/TDengine/include/common/taosdef.h /usr/include/taosdef.h
 COPY --from=builder /td/TDengine/include/util/taoserror.h /usr/include/taoserror.h
 COPY --from=builder /td/TDengine/include/util/tdef.h /usr/include/tdef.h
 COPY --from=builder /td/TDengine/include/libs/function/taosudf.h /usr/include/taosudf.h
