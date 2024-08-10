@@ -4,7 +4,7 @@ name: Docker BuildX-ARM/v7 and Push
 on:
   push:
     tags:
-      - "v3*"
+      - "vd3*"
 
 env:
   APP_NAME: tdengine
