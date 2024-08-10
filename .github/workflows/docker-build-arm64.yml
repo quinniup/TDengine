@@ -1,5 +1,5 @@
 
-name: Docker BuildX and Push
+name: Docker BuildX-ARM64 and Push
 
 on:
   push:
