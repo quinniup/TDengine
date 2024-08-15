@@ -64,6 +64,13 @@ else ()
     cat("${TD_SUPPORT_DIR}/taosadapter_CMakeLists.txt.in" ${CONTRIB_TMP_FILE})
 endif()
 
+if(${BUILD_HTTP})
+    MESSAGE("BUILD_HTTP is on")
+else ()
+    MESSAGE("BUILD_HTTP is off, use taoskeeper")
+    cat("${TD_SUPPORT_DIR}/taoskeeper_CMakeLists.txt.in" ${CONTRIB_TMP_FILE})
+endif()
+
 # pthread
 if(${BUILD_PTHREAD})
     cat("${TD_SUPPORT_DIR}/pthread_CMakeLists.txt.in" ${CONTRIB_TMP_FILE})
