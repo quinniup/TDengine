@@ -12,6 +12,9 @@ case "$OS_ARCH" in
     aarch64|arm64)
         mv go${GO_VERSION}.linux-arm64.tar.gz go.tar.gz
         ;;
+    armv6l|armv7l)
+        mv go${GO_VERSION}.linux-armv6l.tar.gz go.tar.gz
+        ;;        
     *)
         echo "Unsupported architecture: $OS_ARCH"
         exit 1

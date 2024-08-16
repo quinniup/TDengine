@@ -1,4 +1,5 @@
-FROM hub-image.eiot6.com/base/tdengine-builder:v0.0.2 AS builder
+ARG BASE=hub-image.eiot6.com/base/tdengine-builder-armv7
+FROM ${BASE} AS builder
 
 
 WORKDIR /td

@@ -1,7 +1,40 @@
-ARG BASE=hub-image.eiot6.com/base/tdengine-compile-arm64:v3.3.2.6-R1
+FROM docker.cloudimages.asia/ubuntu:20.04 as builder 
 
-FROM ${BASE} AS builder
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+# Install dependencies
+RUN apt update && \
+    apt install -y gcc cmake wget build-essential git libssl-dev libgflags2.2 libgflags-dev libexpat1-dev libapr1-dev libaprutil1-dev libmxml-dev libgeos-dev && \
+    apt install -y build-essential libjansson-dev libsnappy-dev liblzma-dev libz-dev zlib1g pkg-config && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* 
 
+COPY rustup-init.sh  .
+# Install Rust
+RUN chmod +x rustup-init.sh && \
+    ./rustup-init.sh -y && \
+    ln -s /root/.cargo/bin/cargo /usr/bin/cargo && \
+    ln -s /root/.cargo/bin/rustc /usr/bin/rustc && \
+    ln -s /root/.cargo/bin/rustup /usr/bin/rustup
+
+
+COPY gosrc/* .
+COPY golangup-init.sh .
+# Install Golang
+RUN chmod +x golangup-init.sh && \
+    ./golangup-init.sh && \
+    ln -s /usr/local/go/bin/go /usr/bin/go
+
+
+WORKDIR /td
+RUN git clone https://github.com/quinniup/TDengine.git
+
+
+# Compile Source
+RUN mkdir -p TDengine/debug
+WORKDIR /td/TDengine/debug
+RUN cmake .. -DBUILD_TOOLS=true -DBUILD_CONTRIB=true -DBUILD_HTTP=false -DWEBSOCKET=true
+RUN make
 
 ## Create a new image for runtime
 FROM docker.cloudimages.asia/ubuntu:20.04 AS runner 

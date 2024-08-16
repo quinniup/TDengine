@@ -5,7 +5,9 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 # Install dependencies
 RUN apt update && \
     apt install -y gcc cmake wget build-essential git libssl-dev libgflags2.2 libgflags-dev libexpat1-dev libapr1-dev libaprutil1-dev libmxml-dev libgeos-dev && \
-    apt install -y build-essential libjansson-dev libsnappy-dev liblzma-dev libz-dev zlib1g pkg-config 
+    apt install -y build-essential libjansson-dev libsnappy-dev liblzma-dev libz-dev zlib1g pkg-config && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* 
 
 COPY rustup-init.sh  .
 # Install Rust

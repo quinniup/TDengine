@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: mid
+  name: tdengine
+  labels:
+    app: tdengine
+spec:
+  serviceName: taosd
+  replicas: 3
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: tdengine
+  template:
+    metadata:
+      namespace: mid
+      name: tdengine
+      labels:
+        app: tdengine
+        svc: taosd
+    spec:
+      containers:
+        - name: tdengine
+          image: hub-image.eiot6.com/base/tdengine-amd64.slim:3.3.2.6
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: tcp6030
+              protocol: "TCP"
+              containerPort: 6030
+            - name: tcp6041
+              protocol: "TCP"
+              containerPort: 6041
+          env:
+            # POD_NAME for FQDN config
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            # SERVICE_NAME and NAMESPACE for fqdn resolve
+            - name: SERVICE_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.labels['svc']
+            - name: STS_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['app']
+            - name: STS_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            # TZ for timezone settings, we recommend to always set it.
+            - name: TZ
+              value: "Asia/Shanghai"
+            # Environment variables with prefix TAOS_ will be parsed and converted into corresponding parameter in taos.cfg. For example, serverPort in taos.cfg should be configured by TAOS_SERVER_PORT when using K8S to deploy
+            - name: TAOS_SERVER_PORT
+              value: "6030"
+            # Must set if you want a cluster.
+            - name: TAOS_FIRST_EP
+              value: "$(STS_NAME)-0.$(SERVICE_NAME).$(STS_NAMESPACE).svc.cluster.local:$(TAOS_SERVER_PORT)"
+            # TAOS_FQND should always be set in k8s env.
+            - name: TAOS_FQDN
+              value: "$(POD_NAME).$(SERVICE_NAME).$(STS_NAMESPACE).svc.cluster.local"
+          volumeMounts:
+            - name: taosdata
+              mountPath: /var/lib/taos
+      imagePullSecrets:
+        - name: image-pull
+  volumeClaimTemplates:
+    - metadata:
+        name: taosdata
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        storageClassName: cfs
+        resources:
+          requests:
+            storage: "20Gi"

@@ -6,10 +6,14 @@ if [ "$TZ" != "" ]; then
     echo $TZ >/etc/timezone
 fi
 
+ln -sf /usr/bin/nc.openbsd /usr/bin/nc
+
 # option to disable taosadapter, default is no
 DISABLE_ADAPTER=${TAOS_DISABLE_ADAPTER:-0}
 unset TAOS_DISABLE_ADAPTER
 
+DISABLE_KEEPER=${TAOS_DISABLE_KEEPER:-0}
+unset TAOS_DISABLE_KEEPER
 
 # to get mnodeEpSet from data dir
 DATA_DIR=$(taosd -C|grep -E 'dataDir.*(\S+)' -o |head -n1|sed 's/dataDir *//')
@@ -57,18 +61,35 @@ else
         fi
         sleep 1s
     done
-    if ps aux | grep -v grep | grep taosd > dev/null; then
+    if ps aux | grep -v grep | grep -v entrypoint | grep taosd > dev/null; then
         echo "TDengine is running"
       else
         $@ &
     fi
 fi
+   
+echo "adapter: $DISABLE_ADAPTER; keeper: $DISABLE_KEEPER"
 
-# if [ "$DISABLE_ADAPTER" = "0" ]; then
-which taosadapter >/dev/null && taosadapter
-# wait for 6041 port ready
-for _ in $(seq 1 20); do
-    nc -z localhost 6041 && break
-    sleep 0.5
-done
-# fi
+if [ "$DISABLE_ADAPTER" = "$DISABLE_KEEPER" ] && [ "$DISABLE_KEEPER" = "0" ]; then
+    which taosadapter >/dev/null && taosadapter &
+    # wait for 6041 port ready
+    for _ in $(seq 1 20); do
+        nc -z localhost 6041 && break
+        sleep 0.5
+    done
+
+    sleep 3
+    which taoskeeper >/dev/null && taoskeeper
+    # wait for 6043 port ready
+    for _ in $(seq 1 20); do
+        nc -z localhost 6043 && break
+        sleep 0.5
+    done
+else 
+    which taosadapter >/dev/null && taosadapter
+    # wait for 6041 port ready
+    for _ in $(seq 1 20); do
+        nc -z localhost 6041 && break
+        sleep 0.5
+    done
+fi

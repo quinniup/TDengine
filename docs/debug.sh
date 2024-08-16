@@ -19,13 +19,16 @@ slim build \
     --http-probe=false \
     --expose 6030 \
     --expose 6041 \
-    --include-path /td/TDengine \
+    --expose 6043 \
+    --include-path /bin/nc.openbsd \
     --include-path /etc/timezone \
     --include-path /etc/localtime \
     --include-path /usr/bin/taos \
     --include-path /usr/bin/taosd \
     --include-path /usr/bin/udfd \
     --include-path /usr/bin/taosadapter \
+    --include-path /usr/bin/taoskeeper \
+    --include-path /usr/bin/entrypoint.sh \
     --include-path /etc/taos/taos.cfg \
     --include-path /etc/taos/taosadapter.toml \
     --include-path /usr/include/taos.h \
@@ -35,4 +38,32 @@ slim build \
     --include-path /usr/include/taosudf.h \
     --include-path /usr/lib/libtaos.so.1 \
     --include-path /usr/lib/libtaosws.so \
-    --cmd "/usr/bin/taosd -c /etc/taos/taos.cfg" 0fe51f8f978f
+    --include-path /usr/lib/ \
+    --cmd "/usr/bin/taosd -c /etc/taos/taos.cfg" 726875c60510
+
+
+
+slim build \
+    --http-probe=false \
+    --expose 6030 \
+    --expose 6041 \
+    --expose 6043 \
+    --include-path /etc/timezone \
+    --include-path /etc/localtime \
+    --include-bin /usr/bin/taos \
+    --include-bin /usr/bin/taosd \
+    --include-bin /usr/bin/udfd \
+    --include-bin /usr/bin/taosadapter \
+    --include-bin /usr/bin/taoskeeper \
+    --include-exe /usr/bin/ls \
+    --include-exe /usr/bin/ps \
+    --include-exe /usr/bin/seq \
+    --include-exe /usr/bin/nc \
+    --include-exe /usr/bin/sleep \
+    --include-exe /usr/bin/which \
+    --include-path /usr/bin/entrypoint.sh \
+    --include-path /etc/taos/ \
+    --include-path /usr/include/ \
+    --include-path /usr/lib/libtaos.so.1 \
+    --include-path /usr/lib/libtaosws.so \
+    hub-image.eiot6.com/base/tdengine-amd64:3.3.2.6

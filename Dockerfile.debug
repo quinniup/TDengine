@@ -1,0 +1,8 @@
+FROM hub-image.eiot6.com/base/tdengine-amd64.slim:3.3.2.6 AS builder
+
+
+COPY packaging/docker/bin/entrypoint-private.sh /usr/bin/entrypoint.sh
+RUN chmod +x /usr/bin/entrypoint.sh
+ENTRYPOINT [ "/usr/bin/tini", "--", "/usr/bin/entrypoint.sh" ]
+CMD ["taosd"]
+VOLUME [ "/var/lib/taos", "/var/log/taos", "/corefile" ]
