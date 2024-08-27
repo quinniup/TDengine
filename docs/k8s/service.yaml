@@ -2,9 +2,9 @@ apiVersion: v1
 kind: Service
 metadata:
   namespace: mid
-  name: taosd
+  name: iottd
   labels:
-    app: tdengine
+    app: iottd
 spec:
   ports:
     - name: tcp6030
@@ -14,4 +14,4 @@ spec:
       protocol: "TCP"
       port: 6041
   selector:
-    app: tdengine 
+    app: iottd

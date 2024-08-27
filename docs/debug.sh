@@ -60,10 +60,10 @@ slim build \
     --include-exe /usr/bin/seq \
     --include-exe /usr/bin/nc \
     --include-exe /usr/bin/sleep \
-    --include-exe /usr/bin/which \
+    --include-bin /usr/bin/which \
     --include-path /usr/bin/entrypoint.sh \
     --include-path /etc/taos/ \
     --include-path /usr/include/ \
     --include-path /usr/lib/libtaos.so.1 \
     --include-path /usr/lib/libtaosws.so \
-    hub-image.eiot6.com/base/tdengine-amd64:3.3.2.6
+    696e7272c8ed

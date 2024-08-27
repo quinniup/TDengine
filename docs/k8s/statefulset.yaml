@@ -2,28 +2,27 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   namespace: mid
-  name: tdengine
+  name: iot-td
   labels:
-    app: tdengine
+    app: iot-td
 spec:
-  serviceName: taosd
+  serviceName: iot-td
   replicas: 3
   updateStrategy:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: tdengine
+      app: iot-td
   template:
     metadata:
       namespace: mid
-      name: tdengine
+      name: iot-td
       labels:
-        app: tdengine
-        svc: taosd
+        app: iot-td
     spec:
       containers:
-        - name: tdengine
-          image: hub-image.eiot6.com/base/tdengine-amd64.slim:3.3.2.6
+        - name: iot-tdengine
+          image: 031201405738.dkr.ecr.eu-central-1.amazonaws.com/tdengine:3.3.2.6-amd64
           imagePullPolicy: IfNotPresent
           ports:
             - name: tcp6030
@@ -43,7 +42,7 @@ spec:
               valueFrom:
                 fieldRef:
                   apiVersion: v1
-                  fieldPath: metadata.labels['svc']
+                  fieldPath: metadata.labels['app']
             - name: STS_NAME
               valueFrom:
                 fieldRef:
@@ -54,7 +53,9 @@ spec:
                   fieldPath: metadata.namespace
             # TZ for timezone settings, we recommend to always set it.
             - name: TZ
-              value: "Asia/Shanghai"
+              value: "Europe/Berlin"
+            - name: TAOS_TIMEZONE
+              value: "UTC-12"
             # Environment variables with prefix TAOS_ will be parsed and converted into corresponding parameter in taos.cfg. For example, serverPort in taos.cfg should be configured by TAOS_SERVER_PORT when using K8S to deploy
             - name: TAOS_SERVER_PORT
               value: "6030"
@@ -64,18 +65,65 @@ spec:
             # TAOS_FQND should always be set in k8s env.
             - name: TAOS_FQDN
               value: "$(POD_NAME).$(SERVICE_NAME).$(STS_NAMESPACE).svc.cluster.local"
+          resources:
+            limits:
+              cpu: '2'
+              memory: 4Gi
+            requests:
+              cpu: 500m
+              memory: 512Mi              
           volumeMounts:
             - name: taosdata
               mountPath: /var/lib/taos
+            - name: taosconfig
+              mountPath: /etc/taos
+          startupProbe:
+            tcpSocket:
+              port: 6030
+            failureThreshold: 360
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 6030
+            initialDelaySeconds: 5
+            timeoutSeconds: 5000
+          livenessProbe:
+            tcpSocket:
+              port: 6030
+            initialDelaySeconds: 15
+            periodSeconds: 20                  
       imagePullSecrets:
         - name: image-pull
+      volumes:
+        - name: taosconfig
+          configMap:
+            name: iot-td
   volumeClaimTemplates:
     - metadata:
         name: taosdata
       spec:
         accessModes:
           - "ReadWriteOnce"
-        storageClassName: cfs
+        storageClassName: efs-sc
         resources:
           requests:
-            storage: "20Gi"
+            storage: "200Gi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: mid
+  name: iot-td
+  labels:
+    app: iot-td
+spec:
+  ports:
+    - name: tcp6030
+      protocol: "TCP"
+      port: 6030
+    - name: tcp6041
+      protocol: "TCP"
+      port: 6041
+  selector:
+    app: iot-td

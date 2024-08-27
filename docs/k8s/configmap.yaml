@@ -1,0 +1,135 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: iot-td
+  namespace: mid
+  labels:
+    app: iot-td
+  annotations:
+    kubesphere.io/creator: admin
+data:
+  taos.cfg: ''
+  taosadapter.toml: |-
+    debug = true
+    taosConfigDir = ""
+    port = 6041
+    logLevel = "info"
+    httpCodeServerError = false
+    SMLAutoCreateDB = false
+    [cors]
+    allowAllOrigins = true
+    [pool]
+    maxConnect = 64
+    maxIdle = 8
+    idleTimeout = 300
+    [ssl]
+    enable = false
+    certFile = ""
+    keyFile = ""
+    [log]
+    path = "/var/log/taos"
+    rotationCount = 30
+    rotationTime = "24h"
+    rotationSize = "1GB"
+    enableRecordHttpSql = false
+    sqlRotationCount = 2
+    sqlRotationTime = "24h"
+    sqlRotationSize = "1GB"
+    [monitor]
+    disable = true
+    collectDuration = "3s"
+    incgroup = false
+    pauseQueryMemoryThreshold = 70
+    pauseAllMemoryThreshold = 80
+    identity = ""
+    [uploadKeeper]
+    enable = true
+    url = "http://127.0.0.1:6043/adapter_report"
+    interval = "15s"
+    timeout = "5s"
+    retryTimes = 3
+    retryInterval = "5s"
+    [opentsdb]
+    enable = true
+    [influxdb]
+    enable = true
+    [statsd]
+    enable = false
+    port = 6044
+    db = "statsd"
+    user = "root"
+    password = "w2kPev5VGVnFYJgw"
+    worker = 10
+    gatherInterval = "5s"
+    protocol = "udp4"
+    maxTCPConnections = 250
+    tcpKeepAlive = false
+    allowPendingMessages = 50000
+    deleteCounters = true
+    deleteGauges = true
+    deleteSets = true
+    deleteTimings = true
+    [collectd]
+    enable = false
+    port = 6045
+    db = "collectd"
+    user = "root"
+    password = "w2kPev5VGVnFYJgw"
+    worker = 10
+    [opentsdb_telnet]
+    enable = false
+    maxTCPConnections = 250
+    tcpKeepAlive = false
+    dbs = ["opentsdb_telnet", "collectd", "icinga2", "tcollector"]
+    ports = [6046, 6047, 6048, 6049]
+    user = "root"
+    password = "w2kPev5VGVnFYJgw"
+    batchSize = 1
+    flushInterval = "0s"
+    [node_exporter]
+    enable = false
+    db = "node_exporter"
+    user = "root"
+    password = "w2kPev5VGVnFYJgw"
+    urls = ["http://localhost:9100"]
+    responseTimeout = "5s"
+    httpUsername = ""
+    httpPassword = ""
+    httpBearerTokenString = ""
+    caCertFile = ""
+    certFile = ""
+    keyFile = ""
+    insecureSkipVerify = true
+    gatherDuration = "5s"
+    [prometheus]
+    enable = true
+    [tmq]
+    releaseIntervalMultiplierForAutocommit = 2
+  taoskeeper.toml: |-
+    debug = false
+    port = 6043
+    loglevel = "info"
+    gopoolsize = 50000
+    RotationInterval = "15s"
+    [tdengine]
+    host = "127.0.0.1"
+    port = 6041
+    username = "root"
+    password = "w2kPev5VGVnFYJgw"
+    usessl = false
+    [metrics]
+    prefix = "taos"
+    tables = []
+    [metrics.database]
+    name = "log"
+    [metrics.database.options]
+    vgroups = 1
+    buffer = 64
+    keep = 30
+    cachemodel = "both"
+    [environment]
+    incgroup = false
+    [log]
+    rotationCount = 5
+    rotationTime = "24h"
+    rotationSize = 100000000
