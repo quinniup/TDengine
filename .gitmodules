@@ -10,6 +10,7 @@
 [submodule "src/kit/taos-tools"]
 	path = src/kit/taos-tools
 	url = https://github.com/taosdata/taos-tools.git
+	tag = 2.5.3
 [submodule "src/plugins/taosadapter"]
 	path = src/plugins/taosadapter
 	url = https://github.com/taosdata/taosadapter.git

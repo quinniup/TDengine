@@ -1,0 +1,17 @@
+ARG BASE=hub-image.eiot6.com/base/tdengine-builder-arrch32:0.0.1
+FROM ${BASE} AS builder
+
+
+WORKDIR /td
+RUN git clone -b ver-2.6.0.99 https://github.com/quinniup/TDengine.git
+RUN cd TDengine && git log -1
+ 
+
+# Compile Source
+RUN mkdir -p TDengine/debug
+WORKDIR /td/TDengine
+COPY premake.sh .
+RUN chmod +x premake.sh && \
+    ./premake.sh
+
+CMD [ "pwd" ]

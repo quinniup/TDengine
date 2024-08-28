@@ -1,0 +1,25 @@
+ARG BASE=hub-image.eiot6.com/base/tdengine-compile-aarch32:2.6.0.99
+
+FROM ${BASE} AS builder
+
+
+## Create a new image for runtime
+FROM docker.cloudimages.asia/ubuntu:20.04 AS runner 
+RUN apt update && \
+    apt install -y tini netcat tree&& \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+
+ENV ROLE=taosd
+ENV FIRST_ENDPOINT=localhost:6030
+ENV TD_FQDN=localhost
+ENV TD_PORT=6030
+
+COPY --from=builder /td/TDengine/debug/build /td/TDengine/debug/build
+
+RUN grep -r 'taosdump' /td/TDengine/debug/build/bin && sleep 20
+

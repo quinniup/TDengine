@@ -102,3 +102,11 @@ auto-save-list
 tramp
 .\#*
 TAGS
+src/connector/go
+src/connector/hivemq-tdengine-extension
+deps/jemalloc
+src/kit/taos-tools
+src/plugins/taosadapter
+examples/rust
+src/connector/php-tdengine
+src/connector/php-tdengine-restful-connector

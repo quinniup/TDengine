@@ -1,0 +1,50 @@
+ARG BASE=hub-image.eiot6.com/base/tdengine-compile-aarch32:2.6.0.99
+
+FROM ${BASE} AS builder
+
+
+## Create a new image for runtime
+FROM docker.cloudimages.asia/ubuntu:20.04 AS runner 
+RUN apt update && \
+    apt install -y tini netcat && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+
+ENV ROLE=taosd
+ENV FIRST_ENDPOINT=localhost:6030
+ENV TD_FQDN=localhost
+ENV TD_PORT=6030
+
+COPY --from=builder /td/TDengine/src/inc/taos.h /usr/include/taos.h
+COPY --from=builder /td/TDengine/src/inc/taosdef.h /usr/include/taosdef.h
+COPY --from=builder /td/TDengine/src/inc/taoserror.h /usr/include/taoserror.h
+# COPY --from=builder /td/TDengine/include/util/tdef.h /usr/include/tdef.h
+# COPY --from=builder /td/TDengine/include/libs/function/taosudf.h /usr/include/taosudf.h
+## Compile Production
+COPY --from=builder /td/TDengine/debug/build/bin/taosd /usr/bin/taosd
+# COPY --from=builder /td/TDengine/debug/build/bin/udfd /usr/bin/udfd
+COPY --from=builder /td/TDengine/debug/build/bin/taos /usr/bin/taos
+COPY --from=builder /td/TDengine/debug/build/bin/taosadapter /usr/bin/taosadapter
+COPY --from=builder /td/TDengine/debug/build/bin/taosBenchmark /usr/bin/taosBenchmark
+COPY --from=builder /td/TDengine/debug/build/bin/taosdump  /usr/bin/taosdump
+
+## driver
+COPY --from=builder /td/TDengine/debug/build/lib/libtaos.so /usr/lib/libtaos.so.1
+# COPY --from=builder /td/TDengine/debug/build/lib/libtaosws.so /usr/lib/libtaosws.so
+
+## Copy configuration files
+COPY --from=builder /td/TDengine/packaging/cfg/taos.cfg /etc/taos/taos.cfg
+COPY --from=builder /td/TDengine/src/plugins/taosadapter/example/config/taosadapter.toml /etc/taos/taosadapter.toml
+
+COPY packaging/docker/bin/entrypoint.sh /usr/bin/entrypoint.sh
+COPY packaging/docker/bin/env-to-cfg /usr/bin/env-to-cfg
+
+
+RUN chmod +x /usr/bin/entrypoint.sh
+ENTRYPOINT [ "/usr/bin/tini", "--", "/usr/bin/entrypoint.sh" ]
+CMD ["taosd"]
+VOLUME [ "/var/lib/taos", "/var/log/taos", "/corefile" ]
