@@ -6,7 +6,7 @@ FROM ${BASE} AS builder
 ## Create a new image for runtime
 FROM docker.cloudimages.asia/ubuntu:20.04 AS runner 
 RUN apt update && \
-    apt install -y tini netcat && \
+    apt install -y tini netcat gdb&& \
     apt clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
