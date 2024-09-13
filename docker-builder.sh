@@ -1,12 +1,12 @@
 #!/bin/sh
 
 IMAGE="hub-image.eiot6.com/base/tdengine"
-ARCH="amd64"
+ARCH="arm64"
 B_VER="0.0.1"
 C_VER="3.3.2.6"
 VER=$C_VER
 
-PLATFORM="amd64"
+PLATFORM="arm64"
 
 case "$ARCH" in
     x86_64|amd64)
