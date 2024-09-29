@@ -31,6 +31,7 @@ COPY --from=builder /td/TDengine/debug/build/bin/taos /usr/bin/taos
 COPY --from=builder /td/TDengine/debug/build/bin/taoskeeper /usr/bin/taoskeeper
 COPY --from=builder /td/TDengine/debug/build/bin/taosadapter /usr/bin/taosadapter
 COPY --from=builder /td/TDengine/debug/build/bin/taosBenchmark /usr/bin/taosBenchmark
+COPY --from=builder /td/TDengine/debug/build/bin/taosdump /usr/bin/taosdump
 ## driver
 COPY --from=builder /td/TDengine/debug/build/lib/libtaos.so /usr/lib/libtaos.so.1
 COPY --from=builder /td/TDengine/debug/build/lib/libtaosws.so /usr/lib/libtaosws.so

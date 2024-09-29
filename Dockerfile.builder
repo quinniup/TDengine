@@ -1,4 +1,4 @@
-FROM docker.cloudimages.asia/ubuntu:20.04 as builder 
+FROM docker.cloudimages.asia/ubuntu:20.04 AS builder 
 
 ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone

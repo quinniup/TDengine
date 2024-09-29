@@ -218,7 +218,7 @@ int32_t smlBuildCol(STableDataCxt* pTableCxt, SSchema* schema, void* data, int32
     char* tmp = taosMemoryCalloc(kv->keyLen + 1, 1);
     if (tmp) {
       memcpy(tmp, kv->key, kv->keyLen);
-      uInfo("SML data(name:%s type:%s) is not same like the db data(name:%s type:%s)", tmp, tDataTypes[kv->type].name,
+      uDebug("SML data(name:%s type:%s) is not same like the db data(name:%s type:%s)", tmp, tDataTypes[kv->type].name,
             pColSchema->name, tDataTypes[pColSchema->type].name);
       taosMemoryFree(tmp);
     } else {

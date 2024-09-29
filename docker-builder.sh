@@ -25,13 +25,13 @@ case "$ARCH" in
 esac
 
 
-cmd="docker buildx build --platform=${PLATFORM} -t ${IMAGE}-builder-${ARCH}:${B_VER} --load -f Dockerfile.builder ."
+cmd="docker buildx build --platform=${PLATFORM} -t ${IMAGE}-builder-${ARCH}:${B_VER} --push -f Dockerfile.builder ."
 echo $cmd
 
-cmd="docker buildx build --platform=${PLATFORM} --build-arg BASE=${IMAGE}-builder-${ARCH}:${B_VER} -t ${IMAGE}-compile-${ARCH}:${C_VER} --load -f Dockerfile.compile ."
+cmd="docker buildx build --platform=${PLATFORM} --build-arg BASE=${IMAGE}-builder-${ARCH}:${B_VER} -t ${IMAGE}-compile-${ARCH}:${C_VER}_${B_VER} --push -f Dockerfile.compile ."
 echo $cmd
 
-cmd="docker buildx build --platform=${PLATFORM} --build-arg BASE=${IMAGE}-compile-${ARCH}:${C_VER} -t ${IMAGE}-${ARCH}:${VER} --load -f Dockerfile ."
+cmd="docker buildx build --platform=${PLATFORM} --build-arg BASE=${IMAGE}-compile-${ARCH}:${C_VER}_${B_VER} -t ${IMAGE}-${ARCH}:${VER} --push -f Dockerfile ."
 echo $cmd
 
 scmd="slim build \
@@ -46,6 +46,8 @@ scmd="slim build \
     --include-bin /usr/bin/udfd \
     --include-bin /usr/bin/taosadapter \
     --include-bin /usr/bin/taoskeeper \
+    --include-bin /usr/bin/taosdump \
+    --include-bin /usr/bin/taosBenchmark \        
     --include-exe /usr/bin/ls \
     --include-exe /usr/bin/ps \
     --include-exe /usr/bin/seq \
